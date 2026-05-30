@@ -396,7 +396,8 @@ function sleep(ms) {
   flex: 1;
   display: grid;
   grid-template-rows: 230px 1fr 280px;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   position: relative;
   min-width: 0;
 }
@@ -538,7 +539,8 @@ function sleep(ms) {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .hand-cards {
@@ -546,6 +548,8 @@ function sleep(ms) {
   gap: 8px;
   align-items: flex-end;
   overflow-x: auto;
+  overflow-y: visible;
+  padding-top: 20px;
   padding-bottom: 4px;
   flex-shrink: 0;
 }
