@@ -1,0 +1,152 @@
+/* Global CSS Variables */
+:root {
+  --bg-deep:     #0a1438;
+  --bg-water:    #1a2858;
+  --chips-from:  #4dd6ff;
+  --chips-to:    #2196f3;
+  --mult-from:   #ff8844;
+  --mult-to:     #ff3344;
+  --gold:        #ffc857;
+  --sb-blue:     #4a6bff;
+  --text:        #ffffff;
+  --muted:       #8a9bbf;
+  --paper-1:     #fff8e1;
+  --paper-2:     #f7e9c4;
+  --card-edge:   #1a0f24;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', 'PingFang SC', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(45,64,128,.6), transparent 70%),
+    linear-gradient(135deg, #0a1438 0%, #1a2858 50%, #0a1438 100%);
+  background-attachment: fixed;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+/* Fly text animation */
+@keyframes flyUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-60px) scale(1.4); }
+}
+
+.fly-text {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  font-weight: 900;
+  text-shadow: 0 0 10px currentColor;
+  animation: flyUp 0.8s ease-out forwards;
+}
+
+/* Button base styles */
+.btn {
+  min-height: 52px;
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-family: 'Inter', 'PingFang SC', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  border: 2px solid rgba(0,0,0,.35);
+  cursor: pointer;
+  transition: transform 0.12s, filter 0.12s;
+  position: relative;
+  top: 0;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  filter: brightness(0.92);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-play {
+  background: linear-gradient(180deg, #34d399, #10b981, #059669);
+  box-shadow: 0 5px 0 #047857;
+  color: #fff;
+}
+
+.btn-discard {
+  background: linear-gradient(180deg, #fb7185, #ef4444, #dc2626);
+  box-shadow: 0 5px 0 #991b1b;
+  color: #fff;
+}
+
+.btn-sort {
+  background: linear-gradient(180deg, rgba(99,102,241,.28), rgba(67,56,202,.20));
+  box-shadow: none;
+  color: var(--text);
+  border-color: rgba(99,102,241,.4);
+}
+
+.btn-settings {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b, #d97706);
+  box-shadow: 0 5px 0 #92400e;
+  color: #1a1a1a;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.btn-skip {
+  background: linear-gradient(180deg, #818cf8, #6366f1, #4338ca);
+  box-shadow: 0 5px 0 #312e81;
+  color: #fff;
+}
+
+.btn-ai {
+  background: linear-gradient(180deg, #c084fc, #a855f7, #7e22ce);
+  box-shadow: 0 5px 0 #581c87;
+  color: #fff;
+}
+
+@keyframes pulse-ai {
+  0%, 100% { opacity: 1; box-shadow: 0 5px 0 #581c87, 0 0 0 0 rgba(168,85,247,0.7); }
+  50% { opacity: 0.85; box-shadow: 0 5px 0 #581c87, 0 0 20px 8px rgba(168,85,247,0.5); }
+}
+
+.btn-ai.thinking {
+  animation: pulse-ai 0.8s ease-in-out infinite;
+}
