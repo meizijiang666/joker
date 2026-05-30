@@ -513,16 +513,24 @@ function sleep(ms) {
 .deck-layer-1 {
   top: 0;
   left: 0;
-  background: linear-gradient(135deg, #6a2aaa, #3a1472);
+  background-image: url('/deck-back.jpeg');
+  background-size: cover;
+  background-position: center;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: 6px;
+  overflow: hidden;
 }
 
 .deck-count {
   font-family: 'Press Start 2P', monospace;
-  font-size: 16px;
-  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  color: #fff;
+  background: rgba(0,0,0,0.55);
+  padding: 3px 7px;
+  border-radius: 6px;
+  line-height: 1;
 }
 
 .score-popup-container {
