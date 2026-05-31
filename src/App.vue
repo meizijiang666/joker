@@ -83,13 +83,13 @@
             :card="card"
             :selected="state.selectedCardIds.has(card.id)"
             :ref="el => { if(el) cardRefs[card.id] = el }"
-            @click="toggleCard"
+            @click="onToggleCard"
           />
         </div>
 
         <div class="action-buttons">
-          <button class="btn btn-sort" @click="sortByRank">按点排序</button>
-          <button class="btn btn-sort" @click="sortBySuit">按花排序</button>
+          <button class="btn btn-sort" @click="onSortByRank">按点排序</button>
+          <button class="btn btn-sort" @click="onSortBySuit">按花排序</button>
 
           <button
             class="btn btn-play"
@@ -131,8 +131,8 @@
         :shop-items="state.shopItems"
         :gold="state.gold"
         :owned-jokers="state.ownedJokers"
-        @buy="buyJoker"
-        @skip="skipShop"
+        @buy="onBuyJoker"
+        @skip="onSkipShop"
       />
     </div>
 
@@ -155,6 +155,7 @@
 import { ref, computed, reactive, watch, nextTick } from 'vue'
 import { useGame, identifyHand, calculateScore } from './composables/useGame.js'
 import { useAnimation } from './composables/useAnimation.js'
+import { useSound } from './composables/useSound.js'
 import SideBar from './components/SideBar.vue'
 import JokerCard from './components/JokerCard.vue'
 import PlayingCard from './components/PlayingCard.vue'
@@ -181,6 +182,7 @@ const {
 } = useGame()
 
 const anim = useAnimation()
+const sound = useSound()
 
 // Refs for DOM elements
 const playAreaRef = ref(null)
@@ -207,7 +209,33 @@ const settings = reactive({
 function onSettingsChange(newSettings) {
   Object.assign(settings, newSettings)
   anim.speedMult.value = newSettings.speedMult || 1.0
+  sound.setSfxVolume(settings.sfxVolume)
+  sound.setBgmVolume(settings.bgmVolume)
 }
+
+// 首次用户交互时解锁音频上下文并起 BGM（浏览器自动播放策略要求手势触发）
+let audioUnlocked = false
+function unlockAudio() {
+  if (audioUnlocked) return
+  audioUnlocked = true
+  sound.resume()
+  sound.setSfxVolume(settings.sfxVolume)
+  sound.setBgmVolume(settings.bgmVolume)
+  if (state.phase === 'playing' || state.phase === 'shop') sound.startBgm()
+}
+
+// 阶段切换：胜负音效与商店进入音，并控制 BGM 起停
+watch(() => state.phase, (phase) => {
+  if (phase === 'won') {
+    sound.stopBgm()
+    sound.play('win')
+  } else if (phase === 'lost') {
+    sound.stopBgm()
+    sound.play('lose')
+  } else if (phase === 'shop') {
+    sound.play('buy')
+  }
+})
 
 // Computed for preview
 const previewHandType = computed(() => {
@@ -248,6 +276,9 @@ async function handlePlay() {
   const played = getSelectedCards()
   if (played.length === 0) { state.animating = false; return }
 
+  unlockAudio()
+  sound.play('play')
+
   // Pre-calculate result for animation
   const handName = identify(played)
   const handDef = handName ? { chips: 0, mult: 0 } : null
@@ -269,7 +300,8 @@ async function handlePlay() {
 
   // Step 3: per-card chip highlight animation
   const chipsTarget = sideBarRef.value?.scoreBlockRef?.chipsRef
-  for (const card of played) {
+  for (let i = 0; i < played.length; i++) {
+    const card = played[i]
     // spawn fly text from center of play area
     if (playAreaRef.value) {
       const rect = playAreaRef.value.getBoundingClientRect()
@@ -277,6 +309,7 @@ async function handlePlay() {
       const y = rect.top + rect.height / 2
       anim.flyText(`+${card.value}`, '#4dd6ff', x, y, chipsTarget?.$el)
     }
+    sound.playChip(i)
     await sleep(150 * anim.speedMult.value)
   }
 
@@ -285,6 +318,7 @@ async function handlePlay() {
   for (let i = 0; i < state.ownedJokers.length; i++) {
     const jokerEl = jokerRefs[i]?.$el
     if (jokerEl) {
+      sound.play('joker')
       await anim.jokerGlow(jokerEl)
     }
     if (playAreaRef.value) {
@@ -327,6 +361,7 @@ async function dealNewCards(count) {
   const promises = newCards.map((card, i) => {
     const targetEl = cardRefs[card.id]?.$el
     if (!targetEl || !deckRef.value) return Promise.resolve()
+    setTimeout(() => sound.play('deal'), i * 60)
     return anim.flyCardFromDeck(deckRef.value, targetEl, i * 60)
   })
 
@@ -336,6 +371,9 @@ async function dealNewCards(count) {
 async function handleDiscard() {
   if (state.selectedCardIds.size === 0 || state.discardsLeft <= 0 || state.animating) return
   state.animating = true
+
+  unlockAudio()
+  sound.play('discard')
 
   const toDiscard = getSelectedCards()
   const count = toDiscard.length
@@ -349,6 +387,8 @@ async function handleDiscard() {
 
 async function handleAIPlay() {
   if (aiThinking.value || state.animating) return
+  unlockAudio()
+  sound.play('click')
   aiThinking.value = true
 
   // Simulate AI thinking
@@ -365,8 +405,49 @@ async function handleAIPlay() {
 }
 
 function handleRestart() {
+  unlockAudio()
+  sound.play('click')
   animatedScore.value = 0
   startGame()
+  sound.startBgm()
+}
+
+// ====== 交互音效包装 ======
+function onToggleCard(cardId) {
+  if (state.animating) return
+  unlockAudio()
+  const wasSelected = state.selectedCardIds.has(cardId)
+  toggleCard(cardId)
+  // 仅在选中状态真正变化时出声（如已达 5 张上限再点无效，则不响）
+  if (state.selectedCardIds.has(cardId) !== wasSelected) {
+    sound.play(wasSelected ? 'deselect' : 'select')
+  }
+}
+
+function onSortByRank() {
+  unlockAudio()
+  sound.play('click')
+  sortByRank()
+}
+
+function onSortBySuit() {
+  unlockAudio()
+  sound.play('click')
+  sortBySuit()
+}
+
+function onBuyJoker(jokerId) {
+  unlockAudio()
+  const before = state.ownedJokers.length
+  buyJoker(jokerId)
+  if (state.ownedJokers.length > before) sound.play('buy')
+}
+
+function onSkipShop() {
+  unlockAudio()
+  sound.play('click')
+  skipShop()
+  sound.startBgm()
 }
 
 function sleep(ms) {
